@@ -21,6 +21,35 @@ exports.getAllUsers = async (req, res) => {
     });
   }
 };
+exports.getUserById = async (req, res) => {
+  try {
+    const id = req.query.id;
+    // console.log({ id });
+    const user = await User.findByPk(id);
+
+    if (!user) {
+      return res.status(404).json({
+        status: "error",
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        user,
+        message: "User retrieved successfully",
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: "Failed to retrieve user",
+      error: error.message,
+    });
+  }
+};
+
 
 exports.signup = async (req, res) => {
   try {
