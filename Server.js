@@ -1,31 +1,25 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const { sequelize, connectToDB } = require("./Config/db");
 
-const {sql, connectToDB} = require("./Config/db");
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+app.use("/api", require("./routes/userRoutes"));
 
-const testQuery = async () => {
+const initializeServer = async () => {
   try {
-    await connectToDatabase();
-
-    // const result = await sql.query`SELECT TOP 10 * FROM SomeTable`; 
-    // console.log(result.recordset); 
-
-    sql.close();
+    await connectToDB();
+    await sequelize.sync({ force: false });
+    const PORT = 5000;
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
   } catch (error) {
-    console.error('Error running query', error);
+    console.error("❌ Error initializing server:", error);
   }
 };
 
-testQuery();
-
-
-// Start Server
-const PORT = 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+initializeServer();
