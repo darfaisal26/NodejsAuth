@@ -1,4 +1,10 @@
+# Ignore environment files
 .env
 
+# Ignore node modules
 node_modules/
-Config/
+
+# Ignore configuration and environmen
+
+# Ignore .gitignore itself (if needed)
+.gitignore
