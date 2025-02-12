@@ -3,7 +3,7 @@ const { sequelize } = require("../Config/db");
 const bcrypt = require("bcryptjs");
 
 const User = sequelize.define(
-  "User",
+  "Users",
   {
     name: {
       type: DataTypes.STRING,
@@ -54,6 +54,14 @@ const User = sequelize.define(
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
+    },
+    resetPasswordToken: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    resetPasswordExpires: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
   },
   {

@@ -8,12 +8,16 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+
 app.use("/api", require("./routes/userRoutes"));
+app.use("/cop", require("./routes/CustomerOrderRoutes"));
+
 
 const initializeServer = async () => {
   try {
     await connectToDB();
     await sequelize.sync({ force: false });
+
     const PORT = 5000;
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);

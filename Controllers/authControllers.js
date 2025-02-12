@@ -1,60 +1,25 @@
 const User = require("../Models/userModel");
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
-exports.getAllUsers = async (req, res) => {
-  try {
-    const users = await User.findAll();
-    res.status(200).json({
-      status: "success",
-      results: users.length,
-      data: {
-        users,
-        message: "Retrieved Successfully",
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: "Failed to retrieve users",
-      error: error.message,
-    });
-  }
-};
-exports.getUserById = async (req, res) => {
-  try {
-    const id = req.query.id;
-    // console.log({ id });
-    const user = await User.findByPk(id);
-
-    if (!user) {
-      return res.status(404).json({
-        status: "error",
-        message: "User not found",
-      });
-    }
-
-    res.status(200).json({
-      status: "success",
-      data: {
-        user,
-        message: "User retrieved successfully",
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: "Failed to retrieve user",
-      error: error.message,
-    });
-  }
-};
-
+const sendEmail = require("../utils/sendEmail");
 
 exports.signup = async (req, res) => {
   try {
-    const { name, email, photo, password, confirmPassword } = req.body;
+    const {
+      name,
+      email,
+      photo,
+      password,
+      confirmPassword,
+      role,
+      active,
+      // resetPasswordToken,
+      // resetPasswordExpires,
+    } = req.body;
 
+    // console.log(req.body);
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({
@@ -73,6 +38,10 @@ exports.signup = async (req, res) => {
       email,
       photo,
       password: hashedPassword,
+      role,
+      active,
+      // resetPasswordToken,
+      // resetPasswordExpires,
     });
 
     const token = jwt.sign(
@@ -96,7 +65,6 @@ exports.signup = async (req, res) => {
   }
 };
 
-
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -111,16 +79,10 @@ exports.login = async (req, res, next) => {
       return next(new AppError("User does not exist.", 400));
     }
 
-    // console.log("Stored Hash:", existingUser.password);
-    // console.log("Entered Password:", password);
-
-    // Correct way to use bcrypt.compare with async/await
     const isPasswordValid = await bcrypt.compare(
       password,
       existingUser.password
     );
-
-    // console.log("Password Match:", isPasswordValid);
 
     if (!isPasswordValid) {
       return next(new AppError("Invalid email or password", 401));
@@ -145,70 +107,96 @@ exports.login = async (req, res, next) => {
       },
     });
   } catch (error) {
-    console.error("Login Error:", error);
     return next(new AppError("Something went wrong", 500));
   }
 };
 
-exports.CreateMultipleUsers = async (req, res) => {
+exports.changePassword = async (req, res) => {
   try {
-    let users = req.body;
+    const { currentPassword, newPassword, confirmNewPassword } = req.body;
+    const { userId } = req.params;
 
-    if (!Array.isArray(users)) {
+    const user = await User.findByPk(userId);
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch)
       return res
         .status(400)
-        .json({ message: "Invalid data format. Expected an array." });
+        .json({ message: "Current password is incorrect." });
+
+    if (newPassword !== confirmNewPassword) {
+      return res.status(400).json({ message: "New passwords do not match." });
     }
 
-    const existingEmails = await User.findAll({
-      where: { email: users.map((user) => user.email) },
-      attributes: ["email"],
-    });
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await user.update({ password: hashedPassword });
 
-    const existingEmailSet = new Set(existingEmails.map((user) => user.email));
-
-    users = users.filter((user) => !existingEmailSet.has(user.email));
-
-    if (users.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "All provided emails already exist." });
-    }
-
-    for (const user of users) {
-      if (!user.password || user.password !== user.confirmPassword) {
-        return res
-          .status(400)
-          .json({ message: `Passwords do not match for ${user.email}` });
-      }
-      user.password = await bcrypt.hash(user.password, 12);
-      delete user.confirmPassword;
-    }
-
-    const newUsers = await User.bulkCreate(users, { returning: true });
-
-    const tokens = newUsers.map((user) => ({
-      email: user.email,
-      token: jwt.sign(
-        { id: user.id, email: user.email },
-        process.env.JWT_SECRET || "your_default_secret",
-        { expiresIn: process.env.JWT_EXPIRES_IN || "1h" }
-      ),
-    }));
-
-    res.status(201).json({
-      message: "Users created successfully",
-      users: newUsers.map((user) => ({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      })),
-      tokens,
-    });
+    res.status(200).json({ message: "Password changed successfully" });
   } catch (error) {
-    return res.status(500).json({
-      message: "Something went wrong",
-      error: error.message,
+    res
+      .status(500)
+      .json({ message: "Something went wrong", error: error.message });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    console.log(email);
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
+    await user.save();
+
+    const resetUrl = `http://localhost:5000/api/reset-password/${resetToken}`;
+    await sendEmail({
+      to: user.email,
+      subject: "Password Reset Request",
+      text: `Click the following link to reset your password: ${resetUrl}`,
     });
+
+    res.status(200).json({ message: "Password reset link sent!" });
+  } catch (error) {
+    console.log("Forgot Password Error:", error);
+    res
+      .status(500)
+      .json({ message: "Something went wrong", error: error.message });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { newPassword } = req.body;
+
+    const user = await User.findOne({
+      where: {
+        resetPasswordToken: token,
+        resetPasswordExpires: { [Op.gt]: Date.now() },
+      },
+    });
+
+    if (!user)
+      return res.status(400).json({ message: "Invalid or expired token" });
+
+    const salt = await bcrypt.genSalt(12);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    user.password = hashedPassword;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successfully!" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Something went wrong", error: error.message });
   }
 };
