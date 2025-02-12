@@ -4,13 +4,19 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const { sequelize, connectToDB } = require("./Config/db");
 
+const AuthRoutes = require("./routes/authRoutes");
+const UserRoutes = require("./routes/userRoutes");
+const OrderRoutes = require("./routes/orderRoutes");
+const CustomerRoutes = require("./routes/customerRoutes");
+
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-
-app.use("/api", require("./routes/userRoutes"));
-app.use("/cop", require("./routes/CustomerOrderRoutes"));
+app.use("/api/auth", AuthRoutes);
+app.use("/api/user", UserRoutes);
+app.use("/api/order", OrderRoutes);
+app.use("/api/customer", CustomerRoutes);
 
 
 const initializeServer = async () => {

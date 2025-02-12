@@ -1,6 +1,6 @@
 const userService = require("../Services/userService");
 
-exports.getAllUsers = async (req, res) => {
+const getAllUsers = async (req, res) => {
   try {
     const users = await userService.getAllUsers();
     res.status(200).json({
@@ -13,7 +13,7 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-exports.getUserById = async (req, res) => {
+const getUserById = async (req, res) => {
   try {
     const id = req.query.id;
     const user = await userService.getUserById(id);
@@ -33,7 +33,7 @@ exports.getUserById = async (req, res) => {
   }
 };
 
-exports.updateUser = async (req, res) => {
+const updateUser = async (req, res) => {
   try {
     const { name, email, photo } = req.body;
     const { userId } = req.params;
@@ -56,7 +56,7 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-exports.deleteUser = async (req, res) => {
+const deleteUser = async (req, res) => {
   try {
     const userId = req.query.id;
     const deleted = await userService.deleteUser(userId);
@@ -71,7 +71,7 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-exports.createMultipleUsers = async (req, res) => {
+const createMultipleUsers = async (req, res) => {
   try {
     const users = req.body;
     const { newUsers, tokens } = await userService.createMultipleUsers(users);
@@ -90,4 +90,12 @@ exports.createMultipleUsers = async (req, res) => {
       .status(500)
       .json({ message: "Something went wrong", error: error.message });
   }
+};
+
+module.exports = {
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+  createMultipleUsers,
 };

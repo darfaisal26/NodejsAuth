@@ -10,8 +10,6 @@ const getAllOrders = async () => {
   });
 };
 
-
-
 const findOrderById = async (id) => {
   return await Order.findByPk(id, {
     include: [{ model: Customer, attributes: ["customer_id", "name"] }],

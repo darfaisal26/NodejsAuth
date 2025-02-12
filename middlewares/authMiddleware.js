@@ -10,15 +10,12 @@ exports.protect = async (req, res, next) => {
     }
 
       token = token.split(" ")[1];
-    //   console.log(token, 'here')
-    //   console.log(process.env.JWT_SECRET )
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || "your_default_secret");
-    //   console.log(decoded,'decoded')
-
+      const decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET || "your_default_secret"
+      );
 
       const user = await User.findOne({ where: { id: decoded?.id } });
-    //   console.log(user,'user')
 
     if (!user) {
       return res.status(401).json({ message: "User not found. Unauthorized access." });
