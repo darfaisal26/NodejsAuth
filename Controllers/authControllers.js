@@ -149,3 +149,66 @@ exports.login = async (req, res, next) => {
     return next(new AppError("Something went wrong", 500));
   }
 };
+
+exports.CreateMultipleUsers = async (req, res) => {
+  try {
+    let users = req.body;
+
+    if (!Array.isArray(users)) {
+      return res
+        .status(400)
+        .json({ message: "Invalid data format. Expected an array." });
+    }
+
+    const existingEmails = await User.findAll({
+      where: { email: users.map((user) => user.email) },
+      attributes: ["email"],
+    });
+
+    const existingEmailSet = new Set(existingEmails.map((user) => user.email));
+
+    users = users.filter((user) => !existingEmailSet.has(user.email));
+
+    if (users.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "All provided emails already exist." });
+    }
+
+    for (const user of users) {
+      if (!user.password || user.password !== user.confirmPassword) {
+        return res
+          .status(400)
+          .json({ message: `Passwords do not match for ${user.email}` });
+      }
+      user.password = await bcrypt.hash(user.password, 12);
+      delete user.confirmPassword;
+    }
+
+    const newUsers = await User.bulkCreate(users, { returning: true });
+
+    const tokens = newUsers.map((user) => ({
+      email: user.email,
+      token: jwt.sign(
+        { id: user.id, email: user.email },
+        process.env.JWT_SECRET || "your_default_secret",
+        { expiresIn: process.env.JWT_EXPIRES_IN || "1h" }
+      ),
+    }));
+
+    res.status(201).json({
+      message: "Users created successfully",
+      users: newUsers.map((user) => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      })),
+      tokens,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Something went wrong",
+      error: error.message,
+    });
+  }
+};
