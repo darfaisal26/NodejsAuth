@@ -1,10 +1,13 @@
-const { findCustomerByEmail,createCustomers } = require("../Services/customerService");
+const {
+  findCustomerByEmail,
+  createCustomer,
+} = require("../Services/customerService");
 
-const createCustomer = async (req, res) => {
+const createCustomers = async (req, res) => {
   try {
     const { name, email } = req.body;
 
-    if (!name || !email ) {
+    if (!name || !email) {
       return res.status(400).json({ message: "All fields are required!" });
     }
 
@@ -13,7 +16,7 @@ const createCustomer = async (req, res) => {
       return res.status(409).json({ message: "Customer already exists!" });
     }
 
-    const customer = await createCustomers(name, email);
+    const customer = await createCustomer(name, email);
 
     res.status(201).json({
       message: "Customer created successfully!",
@@ -24,10 +27,4 @@ const createCustomer = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
-module.exports = { createCustomer};
+module.exports = { createCustomers };

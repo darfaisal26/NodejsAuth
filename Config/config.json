@@ -1,0 +1,24 @@
+{
+  "development": {
+    "username": "nodeuser",
+    "password": "admin@098",
+    "database": "NodeDB",
+    "host": "DESKTOP-UPKIDK7\\SQLEXPRESS",
+    "dialect": "mssql"
+  },
+  "test": {
+    "username": "nodeuser",
+    "password": "admin@098",
+    "database": "NodeDB",
+    "host": "DESKTOP-UPKIDK7\\SQLEXPRESS",
+    "dialect": "mssql"
+  },
+  "production": {
+    "username": "nodeuser",
+    "password": "admin@098",
+    "database": "NodeDB",
+    "host": "DESKTOP-UPKIDK7\\SQLEXPRESS",
+    "dialect": "mssql"
+  }
+}
+

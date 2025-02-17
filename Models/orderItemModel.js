@@ -2,9 +2,10 @@ const { DataTypes } = require("sequelize");
 const { sequelize } = require("../Config/db");
 
 const Order = require("./ordersModel");
+const Product = require("./ProductModel");
 
-const Payment = sequelize.define("Payment", {
-  payment_id: {
+const OrderItem = sequelize.define("OrderItem", {
+  order_item_id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
@@ -17,19 +18,22 @@ const Payment = sequelize.define("Payment", {
       key: "order_id",
     },
   },
-  payment_method: {
-    type: DataTypes.STRING,
+  product_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: Product,
+      key: "product_id",
+    },
+  },
+  quantity: {
+    type: DataTypes.INTEGER,
     allowNull: false,
   },
-  payment_status: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    defaultValue: "Pending",
-  },
-  payment_amount: {
+  total_price: {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
 });
 
-module.exports = Payment;
+module.exports = OrderItem;

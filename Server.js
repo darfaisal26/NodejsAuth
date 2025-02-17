@@ -4,10 +4,12 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const { sequelize, connectToDB } = require("./Config/db");
 
-const AuthRoutes = require("./routes/authRoutes");
 const UserRoutes = require("./routes/userRoutes");
 const OrderRoutes = require("./routes/orderRoutes");
 const CustomerRoutes = require("./routes/customerRoutes");
+const PaymentRoutes = require("./routes/paymentRoutes");
+const ProductRoutes = require("./routes/productRoutes");
+const AuthRoutes = require("./routes/authRoutes");
 
 const app = express();
 app.use(cors());
@@ -16,7 +18,10 @@ app.use(bodyParser.json());
 app.use("/api/auth", AuthRoutes);
 app.use("/api/user", UserRoutes);
 app.use("/api/order", OrderRoutes);
-app.use("/api/customer", CustomerRoutes);
+// app.use("/api/customer", CustomerRoutes);
+app.use("/api/payment", PaymentRoutes);
+app.use("/api/product", ProductRoutes);
+
 
 
 const initializeServer = async () => {
