@@ -1,22 +1,45 @@
-const Product = require('../Models')
+const { Op } = require("sequelize");
+const Product = require("../Models/ProductModel");
 
 const getAllProducts = async (filters) => {
   const { category, size, minPrice, maxPrice } = filters;
-  const products = await Product.findAll({
+  return await Product.findAll({
     where: {
       ...(category && { category_id: category }),
-      ...(size && { size: size }),
-      ...(minPrice && maxPrice && {
-        price: { [Op.between]: [minPrice, maxPrice] },
-      }),
+      ...(size && { size }),
+      ...(minPrice &&
+        maxPrice && { price: { [Op.between]: [minPrice, maxPrice] } }),
     },
   });
-  return products;
 };
 
 const getProductDetails = async (productId) => {
-  const product = await Product.findByPk(productId);
-  return product;
+  return await Product.findByPk(productId);
 };
 
-module.exports = { getAllProducts, getProductDetails };
+const updateOrCreateProduct = async (productData) => {
+  const { product_id, ...updateData } = productData;
+
+  const product = await Product.findByPk(product_id);
+  if (product) {
+    await product.update(updateData);
+    return product;
+  } else {
+    return await Product.create(productData);
+  }
+};
+
+const deleteProduct = async (productId) => {
+  const product = await Product.findByPk(productId);
+  if (!product) return false;
+
+  await product.destroy();
+  return true;
+};
+
+module.exports = {
+  getAllProducts,
+  getProductDetails,
+  updateOrCreateProduct,
+  deleteProduct,
+};

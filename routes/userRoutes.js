@@ -6,7 +6,7 @@ const { protect, adminOnly } = require("../middlewares/authMiddleware");
 
 
 
-router.get("/getUsers", protect, adminOnly, userControllers.getAllUsers);
+router.get("/getUsers", userControllers.getAllUsers);
 router.post("/createUsers", userControllers.createMultipleUsers);
 router.get("/getUsersById", userControllers.getUserById);
 router.put("/update/:userId", protect, userControllers.updateUser);

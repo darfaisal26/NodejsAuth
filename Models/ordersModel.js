@@ -1,7 +1,7 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../Config/db");
 
-const Customer = require("./customerModel"); // Assuming you have a Customer model
+const Customer = require("./customerModel"); 
 
 const Order = sequelize.define("Order", {
   order_id: {
@@ -33,7 +33,6 @@ const Order = sequelize.define("Order", {
   },
 });
 
-// Defining relationships (associations)
 Order.belongsTo(Customer, { foreignKey: "customer_id" });
 
 module.exports = Order;
